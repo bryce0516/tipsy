@@ -15,43 +15,53 @@ class CalculatorViewController: UIViewController {
     @IBOutlet weak var tenPctButton: UIButton!
     @IBOutlet weak var twentyPctButton: UIButton!
     @IBOutlet weak var splitNumberLabel: UILabel!
+    
+    var tip = 0.10
+    var numberOfPeople = 2
+    var billTotal = 0.0
+    var finalResult = "0.0"
     var percentage = 0.1;
 
     @IBAction func tipChanged(_ sender: UIButton) {
-        print("this is sender \(sender.titleLabel?.text)")
-        if sender.titleLabel?.text == "10%" {
-            percentage = 0.1;
-            zeroPctButton.isSelected = false
-            tenPctButton.isSelected = true
-            twentyPctButton.isSelected = false
-            
-        } else if sender.titleLabel?.text == "20%" {
-            percentage = 0.2;
-            zeroPctButton.isSelected = false
-            tenPctButton.isSelected = false
-            twentyPctButton.isSelected = true
-        } else {
-            percentage = 0;
-            zeroPctButton.isSelected = true
-            tenPctButton.isSelected = false
-            twentyPctButton.isSelected = false
-        }
+        
+        billTextField.endEditing(true)
+        
+        
+        zeroPctButton.isSelected = false
+        tenPctButton.isSelected = false
+        twentyPctButton.isSelected = false
+        sender.isSelected = true
+        
+        let buttonTitle = sender.currentTitle!
+        let buttonTitleMinusPerSign = String(buttonTitle.dropLast())
+        let buttonTitleAsNumber = Double(buttonTitleMinusPerSign)!
+        tip = buttonTitleAsNumber / 100
     }
     
     @IBAction func stepperValueChanged(_ sender: UIStepper) {
-        let stepperValue:Float = Float(sender.value)
-        splitNumberLabel.text = String(stepperValue)
+        splitNumberLabel.text = String(format: "%.0f", sender.value)
+        numberOfPeople = Int(sender.value)
     }
     
     @IBAction func calculatePressed(_ sender: UIButton) {
-        let total:Double = Double(billTextField.text!)!
-        let tip:Double = total * percentage
+        let bill = billTextField.text!
+        if bill != "" {
+            billTotal = Double(bill)!
+            let result = billTotal * (1 + tip) / Double(numberOfPeople)
+            finalResult = String(format: "%.2f", result)
+        }
         
-        let amount = total + tip
-        
-        let split = Double(splitNumberLabel.text!) ?? 2
-        let per = amount / split
-        print(per)
+        self.performSegue(withIdentifier: "goToResults", sender: self)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "goToResults" {
+            let destinationVC = segue.destination as! ResultViewController
+            
+            destinationVC.result = finalResult
+            destinationVC.tip = Int(tip * 100)
+            destinationVC.split = numberOfPeople
+        }
     }
 }
 
